@@ -1,0 +1,54 @@
+version: '3.2'
+
+services:
+  swagger-editor:
+    image: swaggerapi/swagger-editor
+    ports:
+      - "888:8080"
+
+
+  mysql_qualys_guard:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      -  "3309:3306"
+    environment:
+        MYSQL_DATABASE: qualys_guard
+        MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      -  mysql_qualys_guard:/var/lib/mysql
+
+  qualys_guard:
+    build: ..
+    ports:
+      - "2010:8080"
+#    volumes:
+#      - type: bind
+#        source: ..
+#        target: /usr/src/app
+
+#
+#  redis:
+#    image: 'bitnami/redis:latest'
+#    environment:
+#      - ALLOW_EMPTY_PASSWORD=yes
+#    ports:
+#      - "6379:6379"
+#
+#  rq-dashboard:
+#    image: 'eoranged/rq-dashboard'
+#    environment:
+#      RQ_DASHBOARD_REDIS_URL: redis://redis:6379
+#      RQ_DASHBOARD_USERNAME: rq
+#      RQ_DASHBOARD_PASSWORD: password
+#    ports:
+#      - "9181:9181"
+
+#  rabbitmq:
+#    image: 'bitnami/rabbitmq:latest'
+#    ports:
+#      - '15672:15672'
+#      - '5672:5672'
+
+volumes:
+  mysql_qualys_guard:
