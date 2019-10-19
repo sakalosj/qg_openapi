@@ -1,64 +1,81 @@
-import pprint
+import os
 
+from connexion import NoContent
 from connexion.decorators.security import validate_scope
 from connexion.exceptions import OAuthProblem, OAuthScopeProblem
 
-from qg_api.db import ScanModel, get_one_or_create, db, ReportModel
-from qg_api.db import db, VulnerModel, PatchModel, ServerModel
+from qg_api.db import Vulner, Patch, Server, Scan, Report, session_scope, Base, engine
 
 
-def admin_action(action: str) -> None:
+def admin_action(action: str):
     actions = {'create': create_all,
-               'drop':drop_all}
-    actions[action]()
+               'drop': drop_all,
+               'test_action': lambda: 'test action called'
+               }
+    return actions[action]()
 
 
 def create_all():
-    print('tring to create')
-    db.create_all()
-    VulnerModel.populate(1000)
-    PatchModel.populate(50)
-    ServerModel.populate(20)
+    print(os.getpid())
+    print('trying to create')
+    Base.metadata.create_all(engine)
+    with session_scope() as session:
+        Vulner.populate(session, 1000)
+        Patch.populate(session, 50)
+        Server.populate(session, 20)
+    return 'CREATED!!!'
 
 
 def drop_all():
-    db.drop_all()
+    print(os.getpid())
+    Base.metadata.drop_all(engine)
+    return 'DROPED!!!'
+
 
 
 def create_scan(body):
-    new_scan = ScanModel.from_dict(**body.to_dict())
-    db.session.add(new_scan)
-    db.session.commit()
-    new_scan.launch()
-    new_scan.status = 'running'
-    db.session.commit()
-    return {'id': new_scan.id}
+    with session_scope() as session:
+        new_scan = Scan.from_dict(session, **body)
+        session.add(new_scan)
+        session.commit()
+        new_scan.launch(session)
+        new_scan.status = 'running'
+        session.commit()
+        return {'id': new_scan.id}
 
 
 def get_scan(scan_id):
-    scan = ScanModel.query.get(scan_id)
-    if scan:
-        scan_dict = scan.to_dict()
-        scan.status = 'finished'
-        db.session.commit()
-        return scan_dict
+    with session_scope() as session:
+        scan = session.query(Scan).get(scan_id)
+        if scan:
+            scan_dict = scan.to_dict()
+            scan.status = 'finished'
+            session.commit()
+            return scan_dict
+        else:
+            return NoContent, 404
 
 
 def create_report(body):
-    new_report = ReportModel.from_dict(**body.to_dict())
-    db.session.add(new_report)
-    db.session.commit()
-    new_report.launch()
-    db.session.commit()
-    return {'id': new_report.id}
+    with session_scope() as session:
+        new_report = Report.from_dict(session, **body)
+        session.add(new_report)
+        session.commit()
+        new_report.launch()
+        session.commit()
+        return {'id': new_report.id}
+
 
 def get_report(report_id):
-    report = ReportModel.query.get(report_id)
-    if report:
-        rep_dict = report.to_dict()
-        report.status = 'finished'
-        db.session.commit()
-        return rep_dict
+    with session_scope() as session:
+        report = session.query(Report).get(report_id)
+        if report:
+            rep_dict = report.to_dict()
+            report.status = 'finished'
+            session.commit()
+            return rep_dict
+        else:
+            return NoContent, 404
 
 
 TOKEN_DB = {
@@ -89,9 +106,9 @@ def basic_auth(username, password, required_scopes=None):
     # optional
     if required_scopes is not None and not validate_scope(required_scopes, info['scope']):
         raise OAuthScopeProblem(
-                description='Provided user doesn\'t have the required access rights',
-                required_scopes=required_scopes,
-                token_scopes=info['scope']
-            )
+            description='Provided user doesn\'t have the required access rights',
+            required_scopes=required_scopes,
+            token_scopes=info['scope']
+        )
 
     return info

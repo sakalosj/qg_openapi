@@ -2,18 +2,11 @@ openapi: 3.0.1
 info:
   title: qg_api
   description: qualys guard rest api
-  termsOfService: http://swagger.io/terms/
-  contact:
-    email: apiteam@swagger.io
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
-externalDocs:
-  description: Find out more about Swagger
-  url: http://swagger.io
+
 servers:
-- url: http://localhost:1010/v1
+- url: http://localhost:2010/v1
+- url: http://localhost:8080/v1
 tags:
 - name: admin
   description: amin actions
@@ -44,7 +37,7 @@ paths:
           content: {}
       x-openapi-router-controller: qg_api.api
 
-  /scan/{scanId}:
+  /scan/{scan_id}:
     get:
       tags:
       - scan
@@ -52,7 +45,7 @@ paths:
       description: Get user by id - description
       operationId: get_scan
       parameters:
-      - name: scanId
+      - name: scan_id
         in: path
         description: ID of scan
         required: true
@@ -69,6 +62,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scan'
       x-openapi-router-controller: qg_api.api
+
   /report:
     post:
       tags:
@@ -83,11 +77,23 @@ paths:
             schema:
               $ref: '#/components/schemas/Report'
       responses:
+        200:
+          description: successfull operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  status:
+                    type: string
         default:
           description: successfull operation
           content: {}
       x-openapi-router-controller: qg_api.api
-  /report/{reportId}:
+  /report/{report_id}:
     get:
       tags:
       - report
@@ -95,7 +101,7 @@ paths:
       description: Get report by id - description
       operationId: get_report
       parameters:
-      - name: reportId
+      - name: report_id
         in: path
         description: ID of scan
         required: true
@@ -111,6 +117,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Report'
+        404:
+          description: Report does not exist
       x-openapi-router-controller: qg_api.api
 
   /admin/{action}:
@@ -143,51 +151,21 @@ components:
           type: string
       example:
         ip: ip
+
     ServerFindings:
       type: object
-      properties:
-        ip:
-          type: string
-        vulners:
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/Vulner'
-        patches:
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/Patch'
-      example:
-        ip: ip
-        patches:
-        - severity: 7
-          title: title
-          qid: 2
-          vulners:
-          - null
-          - null
-        - severity: 7
-          title: title
-          qid: 2
-          vulners:
-          - null
-          - null
-        vulners:
-        - severity: severity
-          solution: solution
-          cveid: 5
-          title: title
-          category: 5
-          qid: 6
-          patch_qid: 1
-        - severity: severity
-          solution: solution
-          cveid: 5
-          title: title
-          category: 5
-          qid: 6
-          patch_qid: 1
+      additionalProperties:
+          type: object
+          properties:
+            vulners:
+              type: array
+              items:
+                $ref: '#/components/schemas/Vulner'
+            patches:
+              type: array
+              items:
+                $ref: '#/components/schemas/Patch'
+
     Scan:
       type: object
       properties:
@@ -229,71 +207,10 @@ components:
         servers:
           type: array
           items:
-            $ref: '#/components/schemas/ServerFindings'
-      example:
-        servers:
-        - ip: ip
-          patches:
-          - severity: 7
-            title: title
-            qid: 2
-            vulners:
-            - null
-            - null
-          - severity: 7
-            title: title
-            qid: 2
-            vulners:
-            - null
-            - null
-          vulners:
-          - severity: severity
-            solution: solution
-            cveid: 5
-            title: title
-            category: 5
-            qid: 6
-            patch_qid: 1
-          - severity: severity
-            solution: solution
-            cveid: 5
-            title: title
-            category: 5
-            qid: 6
-            patch_qid: 1
-        - ip: ip
-          patches:
-          - severity: 7
-            title: title
-            qid: 2
-            vulners:
-            - null
-            - null
-          - severity: 7
-            title: title
-            qid: 2
-            vulners:
-            - null
-            - null
-          vulners:
-          - severity: severity
-            solution: solution
-            cveid: 5
-            title: title
-            category: 5
-            qid: 6
-            patch_qid: 1
-          - severity: severity
-            solution: solution
-            cveid: 5
-            title: title
-            category: 5
-            qid: 6
-            patch_qid: 1
-        id: 0
-        title: title
-        launched: 2000-01-23T04:56:07.000+00:00
-        status: status
+            oneOf:
+              - $ref: '#/components/schemas/Server'
+              - $ref: '#/components/schemas/ServerFindings'
+
     Vulner:
       type: object
       properties:
@@ -305,16 +222,9 @@ components:
           format: int64
         severity:
           type: string
-        cveid:
-          type: integer
-          format: int64
         title:
           type: string
-        category:
-          type: integer
-          format: int64
-        solution:
-          type: string
+
       example:
         severity: severity
         solution: solution
