@@ -2,10 +2,7 @@
 
 from __future__ import absolute_import
 
-from flask import json
-from six import BytesIO
 
-from qg_api.db import ScanModel
 
 
 #

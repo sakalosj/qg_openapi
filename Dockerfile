@@ -12,4 +12,4 @@ ENV OPENAPI_DIR "./openapi"
 
 RUN  pip install --no-cache-dir -r requirements.txt
 
-CMD  python check_connection.py && uwsgi --http :8080 -w app -p 16 --master
+CMD  python check_connection.py && uwsgi --http :8080 -w app --threads 16 --master

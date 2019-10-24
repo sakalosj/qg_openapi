@@ -32,7 +32,6 @@ def drop_all():
     return 'DROPED!!!'
 
 
-
 def create_scan(body):
     with session_scope() as session:
         new_scan = Scan.from_dict(session, **body)

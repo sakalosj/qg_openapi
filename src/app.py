@@ -1,4 +1,5 @@
 #!../venv/bin/python
+import os
 
 import connexion
 
@@ -13,6 +14,9 @@ application = app.app
 def cleanup(resp_or_exc):
     ScopedSession.remove()
 
+@app.app.before_request
+def br():
+    print('!!!!!!!!!!!!!!!!!!!!!!!   ' + str(os.getpid()) + '   !!!!!!!!!!!!!!!!!!!!')
 
 if __name__ == '__main__':
     app.run(port=2010)

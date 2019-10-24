@@ -5,6 +5,8 @@ services:
     image: swaggerapi/swagger-editor
     ports:
       - "888:8080"
+    networks:
+      - inner
 
   mysql_qualys_guard:
     image: mysql
@@ -16,6 +18,8 @@ services:
         MYSQL_ROOT_PASSWORD: 123456
     volumes:
       -  mysql_qualys_guard:/var/lib/mysql
+    networks:
+      - inner
 
   qualys_guard:
     build: ..
@@ -23,6 +27,15 @@ services:
       - "2010:8080"
     depends_on:
       - mysql_qualys_guard
+    networks:
+      - qg-qs-ext-nw
+      - inner
 
 volumes:
   mysql_qualys_guard:
+
+
+networks:
+  inner:
+  qg-qs-ext-nw:
+    external: true

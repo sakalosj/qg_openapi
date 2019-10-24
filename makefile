@@ -42,3 +42,16 @@ deploy_test:
 	java -jar openapi-generator-cli.jar generate -i $(openapi_t_file) -g python-flask -o server &&\
 	cp -r ./client/* /home/saki/PycharmProjects/qg_openapi_client &&\
 	cp -r ./server/* /home/saki/PycharmProjects/qg_openapi_server
+
+
+dc_up:
+	cd docker &&\
+	docker-compose -p qg up --build
+
+dc_down:
+	cd docker &&\
+	docker-compose -p qg down
+
+dc_clean:
+	cd docker &&\
+	docker-compose -p qg down -v
